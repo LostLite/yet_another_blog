@@ -1,6 +1,34 @@
-from django.shortcuts import render
+from django.db.models import Count, Q
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.shortcuts import render, get_object_or_404, redirect
+from django.urls import reverse
 from .models import Post
+from .forms import CommentForm
 from marketing.models import Signup
+
+
+def search(request):
+    queryset = Post.objects.all()
+    query = request.GET.get('q')
+    if query:  # search query has been submitted
+        queryset = queryset.filter(
+            Q(title__icontains=query) |
+            Q(overview__icontains=query)
+        ).distinct()
+
+    context = {
+        'queryset': queryset
+    }
+
+    return render(request, 'search_results.html', context)
+
+
+def get_category_count():
+    # annotate returns a dictionary where each key is going to be each category
+    queryset = Post.objects.values(
+        'categories__title').annotate(Count('categories__title'))
+
+    return queryset
 
 
 def index(request):
@@ -22,8 +50,49 @@ def index(request):
 
 
 def blog(request):
-    return render(request, template_name='blog.html', context={})
+    category_count = get_category_count()
+    post_list = Post.objects.all()
+    most_recent = Post.objects.order_by('-timestamp')[:3]
+    # define pagination
+    paginator = Paginator(post_list, 4)
+    page_request_var = 'page'
+    page = request.GET.get(page_request_var)
+
+    try:
+        paginated_queryset = paginator.page(page)
+    except PageNotAnInteger:
+        paginated_queryset = paginator.page(1)
+    except EmptyPage:
+        paginated_queryset = paginator.page(paginator.num_pages)
+
+    context = {
+        'post_list': paginated_queryset,
+        'most_recent': most_recent,
+        'category_count': category_count,
+        'page_request_var': page_request_var,
+    }
+    return render(request, template_name='blog.html', context=context)
 
 
-def post(request):
-    return render(request, template_name='post.html', context={})
+def post(request, id):
+    category_count = get_category_count()
+    most_recent = Post.objects.order_by('-timestamp')[:3]
+    post = get_object_or_404(Post, id=id)
+
+    form = CommentForm(request.POST or None)
+    if request.method == 'POST':
+        if form.is_valid():
+            form.instance.user = request.user
+            form.instance.post = post
+            form.save()
+            return redirect(reverse('post', kwargs={
+                'id': post.id,
+            }))
+
+    context = {
+        'post': post,
+        'most_recent': most_recent,
+        'category_count': category_count,
+        'form': form
+    }
+    return render(request, template_name='post.html', context=context)
