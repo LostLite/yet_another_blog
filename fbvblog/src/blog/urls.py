@@ -8,6 +8,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('posts.urls')),
     path('tinymce/', include('tinymce.urls')),
+    path('accounts/', include('allauth.urls')),
 ]
 
 if settings.DEBUG:
