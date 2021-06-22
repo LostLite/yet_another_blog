@@ -24,7 +24,7 @@ class Category(models.Model):
 
 class Post(models.Model):
     title = models.CharField(max_length=200)
-    overview = models.TextField()
+    overview = HTMLField()
     timestamp = models.DateTimeField(auto_now_add=True)
     content = HTMLField()
     comment_coumt = models.IntegerField(default=0)
@@ -43,6 +43,16 @@ class Post(models.Model):
 
     def get_absolute_url(self):
         return reverse('post', kwargs={
+            'id': self.id,
+        })
+
+    def get_update_url(self):
+        return reverse('post-update', kwargs={
+            'id': self.id,
+        })
+
+    def get_delete_url(self):
+        return reverse('post-delete', kwargs={
             'id': self.id,
         })
 

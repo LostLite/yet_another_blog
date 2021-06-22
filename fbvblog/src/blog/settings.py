@@ -27,6 +27,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     'tinymce',
+    'crispy_forms',
 
     'posts',
     'marketing',
@@ -125,7 +126,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Tinymce
 TINYMCE_DEFAULT_CONFIG = {
     'height': 360,
-    'width': 1120,
     'cleanup_on_startup': True,
     'custom_undo_redo_levels': 20,
     'selector': 'textarea',
@@ -151,3 +151,6 @@ TINYMCE_DEFAULT_CONFIG = {
     'menubar': True,
     'statusbar': True,
 }
+
+# crispy forms
+CRISPY_TEMPLATE_PACK = 'bootstrap4'
